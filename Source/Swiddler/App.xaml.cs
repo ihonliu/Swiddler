@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml;
+using System.Xml.Serialization;
 
-namespace Swiddler
-{
+namespace Swiddler {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
-    {
+    public partial class App : Application {
         public AppResources Res { get; private set; }
 
         public static new App Current { get; private set; }
@@ -27,8 +27,7 @@ namespace Swiddler
 
         public bool PcapSelectionExport { get; set; } = true;
 
-        protected override void OnStartup(StartupEventArgs e)
-        {
+        protected override void OnStartup(StartupEventArgs e) {
             InDesignMode = false;
             Current = (App)Application.Current;
             Res = new AppResources();
@@ -39,28 +38,51 @@ namespace Swiddler
 
             var firstArg = e.Args.FirstOrDefault();
 
-            if (firstArg?.Equals("-nonew", StringComparison.OrdinalIgnoreCase) == true)
-            {
+            if (firstArg?.Equals("-nonew", StringComparison.OrdinalIgnoreCase) == true) {
                 new MainWindow().Show();
             }
-            else if (firstArg?.Equals("-settings", StringComparison.OrdinalIgnoreCase) == true && e.Args.Length == 2)
-            {
+            else if (firstArg?.Equals("-settings", StringComparison.OrdinalIgnoreCase) == true && e.Args.Length == 2) {
                 var cs = ConnectionSettings.Deserialize(File.ReadAllBytes(e.Args[1]));
                 var session = cs.CreateSession();
-                if (session != null)
-                {
+                if (session != null) {
                     var mainWindow = new MainWindow();
                     mainWindow.Show();
                     mainWindow.AddSessionAndStart(session);
                 }
             }
-            else
-            {
+            else if ((firstArg?.Equals("-batchSettings", StringComparison.OrdinalIgnoreCase) ?? false) &&
+                     e.Args.Length == 2) {
+                var bcs = BatchConnectionSettings.Deserialize(File.ReadAllBytes(e.Args[1]));
+                if (bcs.ConnectionSettingses.Count <= 0) return;
+                var mainWindow = new MainWindow();
+
+                foreach (var c in bcs.ConnectionSettingses) {
+                    mainWindow.AddSessionAndStart(c.CreateSession());
+                }
+                mainWindow.Show();
+            }
+            else if ((firstArg?.Equals("-g", StringComparison.OrdinalIgnoreCase) ?? false) && e.Args.Length == 1) {
+                var c = ConnectionSettings.New();
+                var bs = c.Serialize();
+                var fs = new FileStream("ExampleConfig.xml", FileMode.Create);
+                fs.Write(bs, 0, bs.Length);
+                fs.Close();
+                Shutdown(0);
+            }
+            else if ((firstArg?.Equals("-gb", StringComparison.OrdinalIgnoreCase) ?? false) && e.Args.Length == 1) {
+                var c = BatchConnectionSettings.New();
+                var bs = c.Serialize();
+                var fs = new FileStream("ExampleConfigBatch.xml", FileMode.Create);
+                fs.Write(bs, 0, bs.Length);
+                fs.Close();
+                Shutdown(0);
+
+            }
+            else {
                 Rect rect = Rect.Empty;
                 var session = SessionFromArgs(e.Args);
 
-                if (session == null)
-                {
+                if (session == null) {
                     ShutdownMode = ShutdownMode.OnExplicitShutdown;
                     var dlg = new NewConnection() { ShowInTaskbar = true, Title = "Swiddler", WindowStartupLocation = WindowStartupLocation.CenterScreen };
                     dlg.ShowDialog();
@@ -68,12 +90,10 @@ namespace Swiddler
                     rect = new Rect(dlg.Left, dlg.Top, dlg.Width, dlg.Height);
                 }
 
-                if (session != null)
-                {
+                if (session != null) {
                     ShutdownMode = ShutdownMode.OnLastWindowClose;
                     var mainWindow = new MainWindow();
-                    if (!rect.IsEmpty)
-                    {
+                    if (!rect.IsEmpty) {
                         mainWindow.Left = (rect.Width - mainWindow.Width) / 2.0 + rect.Left; // center of closed NewConnection dialog
                         mainWindow.Top = (rect.Height - mainWindow.Height) / 2.0 + rect.Top;
                     }
@@ -83,19 +103,15 @@ namespace Swiddler
             }
         }
 
-        Session SessionFromArgs(string[] args)
-        {
+        Session SessionFromArgs(string[] args) {
             if (args.Length == 0) return null;
-            try
-            {
+            try {
                 ConnectionSettings cs = null;
                 string listener = null;
                 bool udp = false;
-                for (int i = 0; i < args.Length; i++)
-                {
+                for (int i = 0; i < args.Length; i++) {
                     var arg = args[i];
-                    if (arg.Equals("-l", StringComparison.OrdinalIgnoreCase) && args.Length > i + 1)
-                    {
+                    if (arg.Equals("-l", StringComparison.OrdinalIgnoreCase) && args.Length > i + 1) {
                         arg = args[++i];
                         if (int.TryParse(arg, out var port))
                             listener = "0.0.0.0:" + port;
@@ -103,8 +119,7 @@ namespace Swiddler
                             listener = arg;
                         continue;
                     }
-                    if (arg.Equals("-u", StringComparison.OrdinalIgnoreCase))
-                    {
+                    if (arg.Equals("-u", StringComparison.OrdinalIgnoreCase)) {
                         udp = true;
                         continue;
                     }
@@ -119,13 +134,11 @@ namespace Swiddler
                 if (Net.TryParseUri(listener, out var listenerUri) && cs == null)
                     cs = ConnectionSettings.New();
 
-                if (cs != null)
-                {
+                if (cs != null) {
                     cs.TCPChecked = !udp;
                     cs.UDPChecked = udp;
                 }
-                if (listenerUri != null)
-                {
+                if (listenerUri != null) {
                     cs.ServerChecked = true;
                     cs.ServerSettings.IPAddress = listenerUri.GetTrimmedHost(); // expected IP address
                     cs.ServerSettings.Port = listenerUri.Port;
@@ -133,19 +146,17 @@ namespace Swiddler
 
                 return cs?.CreateSession();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 string msg = "";
                 if (ex is ValueException) msg = ex.Message + "\n\n";
                 MessageBox.Show(msg + "Usage: swiddler.exe [remote_ip:port] [-l [listener_ip:]port] [-u]", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 Environment.Exit(1);
             }
-            
+
             return null;
         }
 
-        private void EnsureUserFolders()
-        {
+        private void EnsureUserFolders() {
             AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(Swiddler));
             if (!Directory.Exists(AppDataPath)) Directory.CreateDirectory(AppDataPath);
             if (!Directory.Exists(RecentPath)) Directory.CreateDirectory(RecentPath);
