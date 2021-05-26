@@ -16,13 +16,16 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace Swiddler.Views
-{
+namespace Swiddler.Views {
+    public enum EncodingList {
+        UTF_8,
+        OEM_US,
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
-    {
+    public partial class MainWindow : Window {
         private readonly SessionTree sessionTree;
 
         private TaskbarProgress taskbarProgress;
@@ -32,12 +35,11 @@ namespace Swiddler.Views
         public bool PcapSelectionExport { get => App.Current.PcapSelectionExport; set => App.Current.PcapSelectionExport = value; }
         public bool BinaryInput { get; private set; }
 
-        public Encoding InputEncoding { get; } = Encoding.GetEncoding(437); // IBM 437 (OEM-US)
+        public Encoding InputEncoding { get; private set; } = Encoding.UTF8;
 
         public BindableProperties Properties { get; } = new BindableProperties();
 
-        public MainWindow()
-        {
+        public MainWindow() {
             var userSettings = UserSettings.Load();
 
             App.Current.PcapSelectionExport = userSettings.PcapSelectionExport;
@@ -46,8 +48,7 @@ namespace Swiddler.Views
 
             InitializeComponent();
 
-            if (userSettings.MainWindowBounds.HasSize())
-            {
+            if (userSettings.MainWindowBounds.HasSize()) {
                 var rect = userSettings.MainWindowBounds;
                 Left = rect.Left;
                 Top = rect.Top;
@@ -55,8 +56,7 @@ namespace Swiddler.Views
                 Height = rect.Height;
             }
 
-            if (userSettings.MainWindowBounds.HasSize())
-            {
+            if (userSettings.MainWindowBounds.HasSize()) {
                 if (userSettings.MainWindowLeftColumn > 0) leftCol.Width = new GridLength(userSettings.MainWindowLeftColumn);
                 if (userSettings.MainWindowBottomRow > 0) InputRowHeight = new GridLength(userSettings.MainWindowBottomRow);
             }
@@ -82,14 +82,12 @@ namespace Swiddler.Views
             CommandBindings.Add(new CommandBinding(MiscCommands.ToggleHex, (s, e) => ToggleBinaryInput(!BinaryInput)));
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
+        private void Window_Loaded(object sender, RoutedEventArgs e) {
             Properties.InputText_ScrollViewer = inputText.Template.FindName("PART_ContentHost", inputText) as ScrollViewer;
             Properties.InputVisibility = Visibility.Collapsed;
         }
 
-        void InitMRU(IEnumerable<string> mru)
-        {
+        void InitMRU(IEnumerable<string> mru) {
             quickMRU = new ObservableCollection<string>(mru) ?? new ObservableCollection<string>();
 
             var viewSource = new CollectionViewSource() { Source = quickMRU };
@@ -98,8 +96,7 @@ namespace Swiddler.Views
             QuickConnectCombo.Text = "http://example.org";
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
+        protected override void OnClosed(EventArgs e) {
             base.OnClosed(e);
 
             var settings = UserSettings.Load();
@@ -114,20 +111,17 @@ namespace Swiddler.Views
             settings.Save();
         }
 
-        private void OleProgressChanged(object sender, double val)
-        {
+        private void OleProgressChanged(object sender, double val) {
             taskbarProgress.Visible = (0 < val);
             taskbarProgress.ProgressValue = val;
         }
 
-        private void Window_SourceInitialized(object sender, EventArgs e)
-        {
+        private void Window_SourceInitialized(object sender, EventArgs e) {
             var hwndSource = (HwndSource)HwndSource.FromVisual(this);
             taskbarProgress = new TaskbarProgress(hwndSource.Handle);
         }
 
-        private void FragmentView_SessionChanged(object sender, Session newSession)
-        {
+        private void FragmentView_SessionChanged(object sender, Session newSession) {
             var oldSession = chunkView.FragmentView.CurrentSession;
 
             if (oldSession != null)
@@ -139,32 +133,26 @@ namespace Swiddler.Views
             UpdateInputVisibility(newSession);
         }
 
-        private void Session_StateChanged(object sender, SessionState state)
-        {
+        private void Session_StateChanged(object sender, SessionState state) {
             UpdateCanStop(state);
             UpdateInputVisibility(chunkView.CurrentSession);
         }
 
-        void UpdateCanStop(SessionState state)
-        {
+        void UpdateCanStop(SessionState state) {
             Properties.CanStop = state == SessionState.New || state == SessionState.Started || state == SessionState.Starting;
         }
 
         GridLength validInputRowHeight;
 
-        void UpdateInputVisibility(Session session)
-        {
-            Application.Current.Dispatcher.Invoke(new Action(() =>
-            {
+        void UpdateInputVisibility(Session session) {
+            Application.Current.Dispatcher.Invoke(new Action(() => {
                 Properties.InputVisibility = session.SessionChannel?.IsActive == true ? Visibility.Visible : Visibility.Collapsed;
 
-                if (Properties.InputVisibility == Visibility.Visible && inputRow.Height.GridUnitType == GridUnitType.Auto)
-                {
+                if (Properties.InputVisibility == Visibility.Visible && inputRow.Height.GridUnitType == GridUnitType.Auto) {
                     inputRow.Height = validInputRowHeight;
                     inputRow.MinHeight = 40;
                 }
-                else if (Properties.InputVisibility != Visibility.Visible && inputRow.Height.GridUnitType != GridUnitType.Auto)
-                {
+                else if (Properties.InputVisibility != Visibility.Visible && inputRow.Height.GridUnitType != GridUnitType.Auto) {
                     validInputRowHeight = inputRow.Height;
                     inputRow.Height = GridLength.Auto;
                     inputRow.MinHeight = 0;
@@ -174,38 +162,31 @@ namespace Swiddler.Views
 
         GridLength InputRowHeight {
             get => inputRow.Height.GridUnitType == GridUnitType.Auto ? validInputRowHeight : inputRow.Height;
-            set
-            {
+            set {
                 validInputRowHeight = value;
                 if (inputRow.Height.GridUnitType != GridUnitType.Auto) inputRow.Height = value;
             }
         }
 
-        private void SessionTree_ItemAdded(object sender, int index)
-        {
+        private void SessionTree_ItemAdded(object sender, int index) {
             var item = (SessionListItem)sessionListView.Items[index];
 
-            if (!item.Session.IsChildSession || item.Session.Parent.Children.Count == 1)
-            {
+            if (!item.Session.IsChildSession || item.Session.Parent.Children.Count == 1) {
                 sessionListView.SelectedIndex = index;
                 sessionListView.ScrollIntoView(sessionListView.SelectedItem);
             }
         }
 
-        private void SessionListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sessionListView.SelectedIndex >= 0 && sessionListView.SelectedIndex < sessionTree.FlattenItems.Count)
-            {
+        private void SessionListView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (sessionListView.SelectedIndex >= 0 && sessionListView.SelectedIndex < sessionTree.FlattenItems.Count) {
                 var item = sessionTree.FlattenItems[sessionListView.SelectedIndex];
                 chunkView.SetSession(item.Session);
             }
         }
 
-        private void InputText_KeyDown(object sender, KeyEventArgs e)
-        {
+        private void InputText_KeyDown(object sender, KeyEventArgs e) {
             if (e.Key == Key.Return && e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control) &&
-                chunkView.CurrentSession?.State == SessionState.Started)
-            {
+                chunkView.CurrentSession?.State == SessionState.Started) {
                 Send();
             }
         }
@@ -216,35 +197,29 @@ namespace Swiddler.Views
 
         void GoToEnd() => chunkView.FragmentView.ScrollOwner.ScrollToEnd();
 
-        void Send()
-        {
+        void Send() {
             if (chunkView.CurrentSession?.SessionChannel?.IsActive != true)
                 return;
 
-            try
-            {
+            try {
                 chunkView.CurrentSession.SessionChannel.Submit(GetInputData(BinaryInput, inputText.Text));
                 inputText.Clear();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void NewConnection_Click(object sender, RoutedEventArgs e)
-        {
+        private void NewConnection_Click(object sender, RoutedEventArgs e) {
             var dlg = new NewConnection() { Owner = this };
             dlg.ShowDialog();
             AddSessionAndStart(dlg.Result);
         }
 
-        public bool AddSessionAndStart(Session session)
-        {
+        public bool AddSessionAndStart(Session session) {
             if (session == null) return false;
 
-            if (session.ClientSettings != null)
-            {
+            if (session.ClientSettings != null) {
                 var mrui = session.ClientSettings.ToString().ToLower();
                 if (!quickMRU.Contains(mrui)) quickMRU.Add(mrui);
             }
@@ -257,60 +232,47 @@ namespace Swiddler.Views
             return true;
         }
 
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
+        private void Open_Click(object sender, RoutedEventArgs e) {
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
+        private void Save_Click(object sender, RoutedEventArgs e) {
 
         }
 
-        private void Disconnect_Click(object sender, RoutedEventArgs e)
-        {
+        private void Disconnect_Click(object sender, RoutedEventArgs e) {
             chunkView.CurrentSession?.Stop();
         }
 
-        private void QuickConnect_Click(object sender, RoutedEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(QuickConnectCombo.Text))
-            {
-                try
-                {
+        private void QuickConnect_Click(object sender, RoutedEventArgs e) {
+            if (!string.IsNullOrWhiteSpace(QuickConnectCombo.Text)) {
+                try {
                     AddSessionAndStart(ConnectionSettings.TryCreateFromString(QuickConnectCombo.Text)?.CreateSession());
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
-        private void Send_Click(object sender, RoutedEventArgs e)
-        {
+        private void Send_Click(object sender, RoutedEventArgs e) {
             Send();
         }
 
-        private void QuickConnectCombo_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Return)
-            {
+        private void QuickConnectCombo_PreviewKeyDown(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Return) {
                 e.Handled = true;
                 QuickConnect_Click(sender, e);
             }
         }
 
-        private void inputText_PreviewLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        {
+        private void inputText_PreviewLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
             Keyboard.ClearFocus();
         }
 
-        private void OnPasteCommand(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void OnPasteCommand(object sender, ExecutedRoutedEventArgs e) {
             string binFormat = typeof(byte[]).ToString();
 
-            if (Clipboard.ContainsData(binFormat) && Clipboard.GetData(binFormat) is byte[] data)
-            {
+            if (Clipboard.ContainsData(binFormat) && Clipboard.GetData(binFormat) is byte[] data) {
                 string insertingText;
 
                 if (BinaryInput)
@@ -330,45 +292,37 @@ namespace Swiddler.Views
             }
         }
 
-        int GetHexLocation(int original)
-        {
+        int GetHexLocation(int original) {
             return original * 3 + (original / 4) + (original / 16) + (original / 32);
         }
 
-        void ToggleBinaryInput(bool enabled)
-        {
+        void ToggleBinaryInput(bool enabled) {
             if (BinaryInput == enabled) return;
 
             var selectionStart = inputText.SelectionStart;
             var selectionLength = inputText.SelectionLength;
             var selectionEnd = selectionStart + selectionLength;
 
-            if (enabled)
-            {
+            if (enabled) {
                 var data = InputEncoding.GetBytes(inputText.Text);
                 inputText.Text = data.FormatHex();
                 inputText.SelectionStart = GetHexLocation(selectionStart);
                 inputText.SelectionLength = GetHexLocation(selectionStart + selectionLength) - inputText.SelectionStart;
             }
-            else
-            {
-                try
-                {
+            else {
+                try {
                     inputText.Text.TokenizeHex(out var data, out var locations);
                     inputText.Text = InputEncoding.GetString(data);
 
-                    if (data.Any())
-                    {
+                    if (data.Any()) {
                         int start = 0, end = 0;
-                        for (int i = 0; i < locations.Length; i++)
-                        {
+                        for (int i = 0; i < locations.Length; i++) {
                             //var iplus = i + 1;
                             if (locations[i] <= selectionStart)
                                 start = end = i;
                             else if (locations[i] <= selectionEnd)
                                 end = i;
-                            else
-                            {
+                            else {
                                 if (selectionLength > 0 && locations[i - 1] < selectionEnd)
                                     end++;
                                 break;
@@ -385,8 +339,7 @@ namespace Swiddler.Views
                         inputText.SelectionLength = Math.Max(0, end - start);
                     }
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     enabled = BinaryInput;
                 }
@@ -396,34 +349,26 @@ namespace Swiddler.Views
             binaryInputButton.IsChecked = enabled;
         }
 
-        byte[] GetInputData(bool binary, string text)
-        {
-            if (binary)
-            {
+        byte[] GetInputData(bool binary, string text) {
+            if (binary) {
                 text.TokenizeHex(out var data, out _);
                 return data;
             }
-            else
-            {
+            else {
                 return InputEncoding.GetBytes(text);
             }
         }
 
-        private void BinaryInput_Toggled(object sender, RoutedEventArgs e)
-        {
+        private void BinaryInput_Toggled(object sender, RoutedEventArgs e) {
             ToggleBinaryInput(((ToggleButton)sender).IsChecked == true);
         }
 
-        private void inputText_Drop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                try
-                {
+        private void inputText_Drop(object sender, DragEventArgs e) {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
+                try {
                     string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-                    if (files[0].Length > 0)
-                    {
+                    if (files[0].Length > 0) {
                         var fi = new FileInfo(files[0]);
                         if (fi.Length > 1024 * 1024)
                             throw new Exception("File is too large.");
@@ -431,8 +376,7 @@ namespace Swiddler.Views
                         byte[] data;
 
                         using (var stream = File.Open(fi.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                        using (var mem = new MemoryStream())
-                        {
+                        using (var mem = new MemoryStream()) {
                             stream.CopyTo(mem);
                             data = mem.ToArray();
                         }
@@ -443,29 +387,24 @@ namespace Swiddler.Views
                             inputText.Text = InputEncoding.GetString(data);
                     }
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     MessageBox.Show(this, ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
         }
 
-        private void inputText_PreviewDragOver(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop) && !e.Data.ContainsSwiddlerSelection())
-            {
+        private void inputText_PreviewDragOver(object sender, DragEventArgs e) {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) && !e.Data.ContainsSwiddlerSelection()) {
                 e.Effects = DragDropEffects.Copy;
                 e.Handled = true; // accept files
             }
         }
 
-        private void inputText_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
+        private void inputText_SizeChanged(object sender, SizeChangedEventArgs e) {
             Properties.ShowSubmitButton = e.NewSize.Height > 50;
         }
 
-        public class BindableProperties : BindableBase
-        {
+        public class BindableProperties : BindableBase {
             ScrollViewer _InputText_ScrollViewer;
             public ScrollViewer InputText_ScrollViewer { get => _InputText_ScrollViewer; set => SetProperty(ref _InputText_ScrollViewer, value); }
 
@@ -479,5 +418,23 @@ namespace Swiddler.Views
             public bool ShowSubmitButton { get => _ShowSubmitButton; set => SetProperty(ref _ShowSubmitButton, value); }
         }
 
+        private void inputText_OnEncodingChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //MessageBox.Show(e.AddedItems.Count.ToString());
+            if (e.AddedItems.Count != 1) return;
+            if (!(e.AddedItems[0] is EncodingList el)) return;
+            switch (el)
+            {
+                case EncodingList.UTF_8:
+                    InputEncoding = Encoding.UTF8;
+                    break;
+                case EncodingList.OEM_US:
+                    InputEncoding = Encoding.GetEncoding(437); // IBM 437 (OEM-US)
+                    break;
+                default:
+                    InputEncoding = Encoding.UTF8;
+                    break;
+            }
+        }
     }
 }

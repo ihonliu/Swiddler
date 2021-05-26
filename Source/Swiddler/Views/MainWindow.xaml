@@ -22,8 +22,14 @@
     <Window.Resources>
         <SolidColorBrush x:Key="FlaggedBrush">#007ACC</SolidColorBrush>
         <sys:Int32 x:Key="TreeIndent">8</sys:Int32>
+        <ObjectDataProvider x:Key="EncodingEnumData" ObjectType="sys:Enum"
+                            MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:EncodingList" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
     </Window.Resources>
-    
+
     <Window.InputBindings>
         <KeyBinding Command="{x:Static cmd:MiscCommands.QuickConnect}" Gesture="CTRL+Q" />
         <KeyBinding Command="{x:Static cmd:MiscCommands.Send}" Gesture="ALT+S" />
@@ -90,6 +96,10 @@
             <ToggleButton ToolTip="Binary input" Name="binaryInputButton" Checked="BinaryInput_Toggled" Unchecked="BinaryInput_Toggled">
                 <Controls:CrispImage ImageName="Binary" />
             </ToggleButton>
+            <Separator/>
+            <ComboBox ItemsSource="{Binding Source={StaticResource EncodingEnumData}}"
+                      SelectionChanged="inputText_OnEncodingChanged"
+                      SelectedIndex="0" />
         </ToolBar>
         <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
             <Grid.ColumnDefinitions>
@@ -157,7 +167,7 @@
                 </ListView.View>
 
             </Controls:SessionListView>
-            
+
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="False" Focusable="False" />
 
             <Grid Grid.Column="2" SnapsToDevicePixels="True" UseLayoutRounding="True">
@@ -166,7 +176,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="100" Name="inputRow" />
                 </Grid.RowDefinitions>
-                
+
                 <Controls:ChunkView  x:Name="chunkView" Padding="1" />
                 <GridSplitter Height="5" Grid.Row="1" Visibility="{Binding Properties.InputVisibility}" ResizeDirection="Rows" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="False" Focusable="False" />
 

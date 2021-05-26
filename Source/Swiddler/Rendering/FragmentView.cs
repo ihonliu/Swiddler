@@ -77,7 +77,8 @@ namespace Swiddler.Rendering
                 Session = CurrentSession,
                 Metrics = new FragmentViewMetrics()
                 {
-                    Encoding = Encoding.GetEncoding(437), // IBM 437 (OEM-US)
+                    //Encoding = Encoding.GetEncoding(437), // IBM 437 (OEM-US)
+                    Encoding = Encoding.UTF8, 
                     Typeface = new Typeface("Lucida Console"),
                     FontSize = 14,
                 }
