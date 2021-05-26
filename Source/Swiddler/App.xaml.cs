@@ -17,7 +17,7 @@ namespace Swiddler {
     public partial class App : Application {
         public AppResources Res { get; private set; }
 
-        public static new App Current { get; private set; }
+        public new static App Current { get; private set; }
 
         public static bool InDesignMode { get; private set; } = true;
 
