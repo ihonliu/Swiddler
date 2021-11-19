@@ -26,6 +26,9 @@ namespace Swiddler.ViewModels
         string _Title;
         public string Title { get => _Title; set => SetProperty(ref _Title, value); }
 
+        private string _Description;
+        public string Description { get => _Description; set => SetProperty(ref _Description,value); }
+
         SolidColorBrush _StateBrush;
         public SolidColorBrush StateBrush { get => _StateBrush; set => SetProperty(ref _StateBrush, value); }
 
@@ -71,6 +74,7 @@ namespace Swiddler.ViewModels
             _IndentLevel = session.Parent == null ? 0 : 1;
             _PID = session.PID == 0 ? null : (int?)session.PID;
             _Counters = Counters;
+            _Description = session.Description;
 
             UpdateStateBrush(Session.State);
             UpdateProcessInfoAsync();

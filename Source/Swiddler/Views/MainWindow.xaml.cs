@@ -418,13 +418,11 @@ namespace Swiddler.Views {
             public bool ShowSubmitButton { get => _ShowSubmitButton; set => SetProperty(ref _ShowSubmitButton, value); }
         }
 
-        private void inputText_OnEncodingChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void inputText_OnEncodingChanged(object sender, SelectionChangedEventArgs e) {
             //MessageBox.Show(e.AddedItems.Count.ToString());
             if (e.AddedItems.Count != 1) return;
             if (!(e.AddedItems[0] is EncodingList el)) return;
-            switch (el)
-            {
+            switch (el) {
                 case EncodingList.UTF_8:
                     InputEncoding = Encoding.UTF8;
                     break;
@@ -435,6 +433,24 @@ namespace Swiddler.Views {
                     InputEncoding = Encoding.UTF8;
                     break;
             }
+        }
+
+        void ClearSessionTree() {
+            for (var index = 0; index < sessionTree.FlattenItems.Count; index++) {
+                var sessionListItem = sessionTree.FlattenItems[index];
+                var session = sessionListItem.Session;
+                if (session.State != SessionState.Started && session.IsChildSession) {
+                    sessionTree.Remove(index);
+                }
+
+                if (session.Parent?.Children?.Count == 0) {
+                    sessionListView.SelectedIndex = 0;
+                }
+            }
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e) {
+            ClearSessionTree();
         }
     }
 }

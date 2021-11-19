@@ -19,7 +19,7 @@ namespace Swiddler.Common
 {
     public delegate void DataChangedDelegate(long atOffset);
 
-    public enum SessionState { New = 0 /* default */, Starting, Started, Error, Stopped , Offline = -1 }
+    public enum SessionState { New = 0 /* default */, Starting, Started, Error, Stopped, Offline = -1 }
 
     public class Session : BindableBase, IDisposable
     {
@@ -33,6 +33,9 @@ namespace Swiddler.Common
 
         string _Name = "New connection";
         public string Name { get => _Name; set => SetProperty(ref _Name, value); }
+
+        private string _Description;
+        public string Description { get => _Description; set => SetProperty(ref _Description, value); }
 
         int _PID;
         public int PID { get => _PID; private set => SetProperty(ref _PID, value); }
@@ -514,7 +517,7 @@ namespace Swiddler.Common
         {
             return ssl ? new SslListenerChannel(this, listener) : new TcpListenerChannel(this, listener);
         }
-        
+
         public TcpChannel CreateTcpChannel(TcpClient client, bool ssl = false)
         {
             var channel = ssl ? new SslChannel(this, client) : new TcpChannel(this, client);

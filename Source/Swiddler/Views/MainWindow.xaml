@@ -78,6 +78,10 @@
                 <ViewModels:ImageButton Text="Save" ImageName="Save" />
             </Button>
             <Separator />
+            <Button Click="Clear_Click" IsEnabled="True">
+                <ViewModels:ImageButton Text="Clear" ImageName="Star"/>
+            </Button>
+            <Separator />
             <Button Click="NewConnection_Click">
                 <ViewModels:ImageButton Text="New connection..." ImageName="Connect" />
             </Button>
@@ -117,7 +121,14 @@
                                     <StackPanel Orientation="Horizontal" 
                                             Margin="{Binding IndentLevel, Mode=OneWay, Converter={StaticResource TreeIndentConverter}, ConverterParameter={StaticResource TreeIndent}}">
                                         <Controls:TreeToggleButton x:Name="ToggleButton" IsChecked="{Binding IsExpanded, Mode=OneWay}" Visibility="Hidden"/>
-                                        <TextBlock Text="{Binding Title, Mode=OneWay}" Margin="2 0 0 0" />
+                                        <TextBlock Margin="2 0 0 0" >
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0} ({1})">
+                                                    <Binding Path="Title"></Binding>
+                                                    <Binding Path="Description"></Binding>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
                                     </StackPanel>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding HasToggleButton, Mode=OneWay}" Value="true">

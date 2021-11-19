@@ -13,8 +13,10 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace Swiddler.ViewModels {
-    public class ConnectionSettings : BindableBase, IComparable<ConnectionSettings>, ICloneable {
+namespace Swiddler.ViewModels
+{
+    public class ConnectionSettings : BindableBase, IComparable<ConnectionSettings>, ICloneable
+    {
         public TCPServerSettings TCPServer { get; set; }
         public TCPClientSettings TCPClient { get; set; }
         public UDPClientSettings UDPClient { get; set; }
@@ -58,7 +60,8 @@ namespace Swiddler.ViewModels {
         [XmlIgnore] public ObservableCollection<SettingsBase> Settings { get; } = new ObservableCollection<SettingsBase>();
 
 
-        public RewriteSettings[] Rewrites {
+        public RewriteSettings[] Rewrites
+        {
             get => Settings.OfType<RewriteSettings>().ToArray();
             set => AddRewrite(value);
         }
@@ -74,7 +77,8 @@ namespace Swiddler.ViewModels {
             return obj;
         }
 
-        void EnsureChildren() {
+        void EnsureChildren()
+        {
             if (TCPServer == null) TCPServer = new TCPServerSettings();
             if (TCPClient == null) TCPClient = new TCPClientSettings();
             if (UDPClient == null) UDPClient = new UDPClientSettings();
@@ -103,13 +107,15 @@ namespace Swiddler.ViewModels {
             IsDirty = false;
         }
 
-        public static ConnectionSettings TryCreateFromString(string text) {
+        public static ConnectionSettings TryCreateFromString(string text)
+        {
             if (Net.TryParseUri(text, out var uri))
                 return TryCreateFromUri(uri);
             return null;
         }
 
-        static ConnectionSettings TryCreateFromUri(UriBuilder uri) {
+        static ConnectionSettings TryCreateFromUri(UriBuilder uri)
+        {
             var cs = New();
 
             cs.ClientChecked = true;
@@ -124,7 +130,8 @@ namespace Swiddler.ViewModels {
             cs.ClientSettings.TargetHost = host;
             cs.ClientSettings.TargetPort = port;
 
-            if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase)) {
+            if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+            {
                 cs.TCPClient.EnableSSL = true;
             }
 
@@ -133,13 +140,16 @@ namespace Swiddler.ViewModels {
 
         #endregion
 
-        private void MakeDirty(object sender, PropertyChangedEventArgs e) {
+        private void MakeDirty(object sender, PropertyChangedEventArgs e)
+        {
             IsDirty = true;
             IsDirtyChanged?.Invoke();
         }
 
-        protected void OnTCPToggled(bool value) {
-            if (value) {
+        protected void OnTCPToggled(bool value)
+        {
+            if (value)
+            {
                 UDPChecked = false;
                 ClientToggleText = "_Client";
                 ServerToggleText = "_Server";
@@ -149,8 +159,10 @@ namespace Swiddler.ViewModels {
             AnyProtocolChecked = _TCPChecked || _UDPChecked;
         }
 
-        protected void OnUDPToggled(bool value) {
-            if (value) {
+        protected void OnUDPToggled(bool value)
+        {
+            if (value)
+            {
                 TCPChecked = false;
                 ClientToggleText = "_Connect";
                 ServerToggleText = "_Bind";
@@ -160,8 +172,10 @@ namespace Swiddler.ViewModels {
             AnyProtocolChecked = _TCPChecked || _UDPChecked;
         }
 
-        protected void OnSnifferToggled(bool value) {
-            if (value) {
+        protected void OnSnifferToggled(bool value)
+        {
+            if (value)
+            {
                 TCPChecked = false;
                 UDPChecked = false;
                 ClientChecked = false;
@@ -172,7 +186,8 @@ namespace Swiddler.ViewModels {
 
                 AnyProtocolChecked = false;
             }
-            else {
+            else
+            {
                 Settings.Remove(Sniffer);
             }
 
@@ -193,15 +208,18 @@ namespace Swiddler.ViewModels {
             if (ServerChecked) OnServerToggled(true);
         }
 
-        protected void OnClientToggled(bool value) {
+        protected void OnClientToggled(bool value)
+        {
             var hasServerSettings = Settings.Any(x => x is ServerSettingsBase); // client setting should be after server settings
-            if (TCPChecked) {
+            if (TCPChecked)
+            {
                 if (value)
                     Settings.Insert(hasServerSettings ? 1 : 0, TCPClient);
                 else
                     Settings.Remove(TCPClient);
             }
-            if (UDPChecked) {
+            if (UDPChecked)
+            {
                 if (value)
                     Settings.Insert(hasServerSettings ? 1 : 0, UDPClient);
                 else
@@ -209,14 +227,17 @@ namespace Swiddler.ViewModels {
             }
         }
 
-        protected void OnServerToggled(bool value) {
-            if (TCPChecked) {
+        protected void OnServerToggled(bool value)
+        {
+            if (TCPChecked)
+            {
                 if (value)
                     Settings.Insert(0, TCPServer);
                 else
                     Settings.Remove(TCPServer);
             }
-            if (UDPChecked) {
+            if (UDPChecked)
+            {
                 if (value)
                     Settings.Insert(0, UDPServer);
                 else
@@ -224,43 +245,52 @@ namespace Swiddler.ViewModels {
             }
         }
 
-        public void AddRewrite(params RewriteSettings[] rewrite) {
+        public void AddRewrite(params RewriteSettings[] rewrite)
+        {
             IsDirty = true;
-            foreach (var item in rewrite) {
+            foreach (var item in rewrite)
+            {
                 item.BinaryChanged += RewriteBinary_Changed;
                 item.PropertyChanged += MakeDirty;
                 Settings.Add(item);
             }
         }
 
-        public void RemoveRewrite(RewriteSettings rewrite) {
+        public void RemoveRewrite(RewriteSettings rewrite)
+        {
             IsDirty = true;
             rewrite.BinaryChanged -= RewriteBinary_Changed;
             rewrite.PropertyChanged -= MakeDirty;
             Settings.Remove(rewrite);
         }
 
-        private void Client_DualModeChanged(object sender, bool e) {
+        private void Client_DualModeChanged(object sender, bool e)
+        {
             var client = (ClientSettingsBase)sender;
             if (e && !(IPAddress.TryParse(client.LocalAddress, out var addr) && addr.IsIPv6()))
                 client.LocalAddress = IPAddress.IPv6Any.ToString(); // switch to IPv6 when dual-mode enabled
         }
 
-        private void Server_DualModeChanged(object sender, bool e) {
+        private void Server_DualModeChanged(object sender, bool e)
+        {
             var server = (ServerSettingsBase)sender;
             if (e && !(IPAddress.TryParse(server.IPAddress, out var addr) && addr.IsIPv6()))
                 server.IPAddress = IPAddress.IPv6Any.ToString(); // switch to IPv6 when dual-mode enabled
         }
 
-        private void UDPClient_IsBroadcastChanged(object sender, bool value) {
+        private void UDPClient_IsBroadcastChanged(object sender, bool value)
+        {
             if (value) UDPClient.TargetHost = BroadcastHost[0];
         }
 
 
         private bool _TCPClientSNIhinted = false;
-        private void TCPClient_EnableSSLChanged(object sender, bool value) {
-            if (value && !_TCPClientSNIhinted) {
-                if (string.IsNullOrEmpty(TCPClient.SNI)) {
+        private void TCPClient_EnableSSLChanged(object sender, bool value)
+        {
+            if (value && !_TCPClientSNIhinted)
+            {
+                if (string.IsNullOrEmpty(TCPClient.SNI))
+                {
                     if (!IPAddress.TryParse(TCPClient.TargetHost, out _)) // only SNI as hostname is valid. no IP address.
                         TCPClient.SNI = TCPClient.TargetHost; // copy hostname to SNI when enabling first time SSL
 
@@ -269,14 +299,16 @@ namespace Swiddler.ViewModels {
             }
         }
 
-        private void RewriteBinary_Changed(object sender, bool enabled) {
+        private void RewriteBinary_Changed(object sender, bool enabled)
+        {
             var obj = (RewriteSettings)sender;
 
             obj.MatchData = ToggleHexFormat(obj.MatchData, enabled);
             obj.ReplaceData = ToggleHexFormat(obj.ReplaceData, enabled);
         }
 
-        string ToggleHexFormat(string source, bool hex) {
+        string ToggleHexFormat(string source, bool hex)
+        {
             if (string.IsNullOrEmpty(source)) return "";
 
             if (hex)
@@ -286,14 +318,18 @@ namespace Swiddler.ViewModels {
             return Encoding.Default.GetString(data);
         }
 
-        static string GetHex(byte[] data) {
+        static string GetHex(byte[] data)
+        {
             return BitConverter.ToString(data).Replace("-", " ");
         }
 
-        public Session CreateSession() {
+        public Session CreateSession()
+        {
             Validate();
 
-            var session = new Session() {
+            var session = new Session()
+            {
+                Description = ServerChecked ? ServerSettings.Name : null,
                 ClientSettings = ClientChecked ? ClientSettings : null,
                 ServerSettings = ServerChecked ? ServerSettings : null,
                 Rewrites = RewriteSettings.GetRewriteRules(Rewrites),
@@ -303,14 +339,17 @@ namespace Swiddler.ViewModels {
             return session;
         }
 
-        public bool ContainsHost(string host) {
-            if (ClientChecked && ClientSettings is ClientSettingsBase client) {
+        public bool ContainsHost(string host)
+        {
+            if (ClientChecked && ClientSettings is ClientSettingsBase client)
+            {
                 if (client.TargetHost?.Equals(host, StringComparison.OrdinalIgnoreCase) == true)
                     return true;
                 if (client.LocalBinding && client.LocalAddress?.Equals(host, StringComparison.OrdinalIgnoreCase) == true)
                     return true;
             }
-            if (ServerChecked && ServerSettings is ServerSettingsBase server) {
+            if (ServerChecked && ServerSettings is ServerSettingsBase server)
+            {
                 if (server.IPAddress?.Equals(host, StringComparison.OrdinalIgnoreCase) == true)
                     return true;
             }
@@ -319,8 +358,10 @@ namespace Swiddler.ViewModels {
         }
 
         [XmlIgnore]
-        public ClientSettingsBase ClientSettings {
-            get {
+        public ClientSettingsBase ClientSettings
+        {
+            get
+            {
                 if (TCPChecked) return TCPClient;
                 if (UDPChecked) return UDPClient;
                 return null;
@@ -328,8 +369,10 @@ namespace Swiddler.ViewModels {
         }
 
         [XmlIgnore]
-        public ProtocolType ProtocolType {
-            get {
+        public ProtocolType ProtocolType
+        {
+            get
+            {
                 if (TCPChecked) return ProtocolType.Tcp;
                 if (UDPChecked) return ProtocolType.Udp;
                 return ProtocolType.Unknown;
@@ -337,8 +380,10 @@ namespace Swiddler.ViewModels {
         }
 
         [XmlIgnore]
-        public ServerSettingsBase ServerSettings {
-            get {
+        public ServerSettingsBase ServerSettings
+        {
+            get
+            {
                 if (TCPChecked) return TCPServer;
                 if (UDPChecked) return UDPServer;
                 return null;
@@ -347,20 +392,25 @@ namespace Swiddler.ViewModels {
 
         #region Validation
 
-        void Validate() {
+        void Validate()
+        {
             if (!Settings.Any(x => x is ClientSettingsBase || x is ServerSettingsBase || x is SnifferSettings))
                 throw new Exception("No socket to create!");
 
-            if (ServerChecked) {
+            if (ServerChecked)
+            {
                 ValidateHostname(ServerSettings.IPAddress, nameof(ServerSettings.IPAddress), true);
                 ValidatePortRange(ServerSettings.Port, nameof(ServerSettings.Port), true);
 
-                if (ServerSettings.DualMode) {
+                if (ServerSettings.DualMode)
+                {
                     if (!IPAddress.Parse(ServerSettings.IPAddress).IsIPv6())
                         throw new ValueException(nameof(ServerSettings.IPAddress), "Only IPv6 is valid address in dual-mode.");
                 }
-                if (TCPChecked) {
-                    if (TCPServer.EnableSSL) {
+                if (TCPChecked)
+                {
+                    if (TCPServer.EnableSSL)
+                    {
                         if (TCPServer.GetSslProtocols() == System.Security.Authentication.SslProtocols.None)
                             throw new ValueException(null, "No server SSL/TLS protocol selected.");
 
@@ -372,11 +422,13 @@ namespace Swiddler.ViewModels {
                     }
                 }
             }
-            if (ClientChecked) {
+            if (ClientChecked)
+            {
                 bool targetIpOnly = false;
                 bool ipv4only = false;
 
-                if (UDPChecked) {
+                if (UDPChecked)
+                {
                     targetIpOnly |= UDPClient.IsBroadcast || UDPClient.IsMulticast;
                     ipv4only |= UDPClient.IsBroadcast;
                 }
@@ -384,25 +436,32 @@ namespace Swiddler.ViewModels {
                 ValidateHostname(ClientSettings.TargetHost, nameof(ClientSettings.TargetHost), targetIpOnly, ipv4only);
                 ValidatePortRange(ClientSettings.TargetPort, nameof(ClientSettings.TargetPort), false);
 
-                if (ClientSettings.LocalBinding) {
+                if (ClientSettings.LocalBinding)
+                {
                     ValidateHostname(ClientSettings.LocalAddress, nameof(ClientSettings.LocalAddress), true, ipv4only);
                     ValidatePortRange(ClientSettings.LocalPort, nameof(ClientSettings.LocalPort), true);
                 }
-                if (ClientSettings.DualMode) {
+                if (ClientSettings.DualMode)
+                {
                     if (!IPAddress.Parse(ClientSettings.LocalAddress).IsIPv6())
                         throw new ValueException(nameof(ClientSettings.LocalAddress), "Only IPv6 is valid source address in dual-mode.");
                 }
-                if (TCPChecked) {
-                    if (TCPClient.EnableSSL) {
+                if (TCPChecked)
+                {
+                    if (TCPClient.EnableSSL)
+                    {
                         if (TCPClient.GetSslProtocols() == System.Security.Authentication.SslProtocols.None)
                             throw new ValueException(null, "No client SSL/TLS protocol selected.");
                     }
                 }
             }
-            if (SnifferChecked) {
+            if (SnifferChecked)
+            {
                 ValidateHostname(Sniffer.InterfaceAddress, nameof(Sniffer.InterfaceAddress), allowOnlyIpAddress: true, allowOnlyIPv4: true);
-                foreach (var filter in Sniffer.CaptureFilter) {
-                    if (!string.IsNullOrEmpty(filter.IPAddress)) {
+                foreach (var filter in Sniffer.CaptureFilter)
+                {
+                    if (!string.IsNullOrEmpty(filter.IPAddress))
+                    {
                         if (!IPAddress.TryParse(filter.IPAddress, out var ip) || ip.AddressFamily != AddressFamily.InterNetwork)
                             throw new ValueException(nameof(Sniffer.CaptureFilter), "Enter valid IPv4 address in capture filter.");
                     }
@@ -415,7 +474,8 @@ namespace Swiddler.ViewModels {
             foreach (var item in Rewrites) ValidateRewrite(item);
         }
 
-        void ValidateRewrite(RewriteSettings rewrite) {
+        void ValidateRewrite(RewriteSettings rewrite)
+        {
             if (!(rewrite.Inbound | rewrite.Outbound))
                 throw new ValueException(null, "Select Inbound or Outbound flow in rewrite section.");
 
@@ -432,21 +492,26 @@ namespace Swiddler.ViewModels {
             rewrite.Normalize();
         }
 
-        void ValidatePortRange(int? port, string propertyName, bool allowAnyPort) {
+        void ValidatePortRange(int? port, string propertyName, bool allowAnyPort)
+        {
             int min = allowAnyPort ? 0 : 1;
             int max = 65535;
 
-            if (port == null || port < min || port > max) {
+            if (port == null || port < min || port > max)
+            {
                 throw new ValueException(propertyName, $"Enter port number between {min}-{max}");
             }
         }
 
-        void ValidateHostname(string host, string propertyName, bool allowOnlyIpAddress, bool allowOnlyIPv4 = false) {
-            if (IPAddress.TryParse(host, out var ip)) {
+        void ValidateHostname(string host, string propertyName, bool allowOnlyIpAddress, bool allowOnlyIPv4 = false)
+        {
+            if (IPAddress.TryParse(host, out var ip))
+            {
                 if (!allowOnlyIPv4 || ip.AddressFamily == AddressFamily.InterNetwork) return;
             }
 
-            if (string.IsNullOrEmpty(host) || allowOnlyIpAddress || allowOnlyIPv4) {
+            if (string.IsNullOrEmpty(host) || allowOnlyIpAddress || allowOnlyIPv4)
+            {
                 if (allowOnlyIPv4) throw new ValueException(propertyName, $"Enter IPv4 address in dotted-quad notation.");
                 string hostnameOr = allowOnlyIpAddress ? "" : " host name or";
                 throw new ValueException(propertyName, $"Enter{hostnameOr} IP address in dotted-quad notation for IPv4 and in colon-hexadecimal notation for IPv6.");
@@ -461,17 +526,21 @@ namespace Swiddler.ViewModels {
         private static readonly XmlSerializerNamespaces emptyNamespaces = new XmlSerializerNamespaces(new[] { new XmlQualifiedName("", "") });
         private static readonly XmlSerializer serializer = new XmlSerializer(typeof(ConnectionSettings));
 
-        public byte[] Serialize() {
+        public byte[] Serialize()
+        {
             using (var stream = new MemoryStream())
-            using (var writer = XmlWriter.Create(stream, writerSettings)) {
+            using (var writer = XmlWriter.Create(stream, writerSettings))
+            {
                 serializer.Serialize(writer, this, emptyNamespaces);
                 return stream.ToArray();
             }
         }
 
-        public static ConnectionSettings Deserialize(byte[] data) {
+        public static ConnectionSettings Deserialize(byte[] data)
+        {
             using (var stream = new MemoryStream(data))
-            using (var reader = XmlReader.Create(stream)) {
+            using (var reader = XmlReader.Create(stream))
+            {
                 var obj = (ConnectionSettings)serializer.Deserialize(reader);
                 obj.Init();
                 return obj;
@@ -486,17 +555,21 @@ namespace Swiddler.ViewModels {
         public static IReadOnlyList<string> KnownMulticastHosts => KnownHosts?.Where(host => IPAddress.TryParse(host, out var ip) && ip.IsMulticast()).ToList();
         public static IReadOnlyList<string> KnownHostnames => KnownHosts?.Where(host => !IPAddress.TryParse(host, out var ip)).ToList();
 
-        public static ConnectionSettings[] GetHistory(int count = 20) {
+        public static ConnectionSettings[] GetHistory(int count = 20)
+        {
             var list = new List<ConnectionSettings>();
 
-            foreach (var file in new DirectoryInfo(App.Current.RecentPath).GetFiles("*.xml")) {
-                try {
+            foreach (var file in new DirectoryInfo(App.Current.RecentPath).GetFiles("*.xml"))
+            {
+                try
+                {
                     var cs = Deserialize(File.ReadAllBytes(file.FullName));
                     cs.CreatedAt = file.CreationTime;
                     cs.FileName = file.FullName;
                     list.Add(cs);
                 }
-                catch {
+                catch
+                {
                     try { file.Delete(); } catch { } // delete invalid file
                 }
             }
@@ -522,33 +595,41 @@ namespace Swiddler.ViewModels {
             return result;
         }
 
-        public void SaveRecent() {
+        public void SaveRecent()
+        {
             EnsureFileExists();
-            if (IsDirty || FileName == null) {
+            if (IsDirty || FileName == null)
+            {
                 FileName = Path.Combine(App.Current.RecentPath, Guid.NewGuid().ToString("D") + ".xml");
                 File.WriteAllBytes(FileName, Serialize());
             }
-            else {
+            else
+            {
                 // nothing changes, so only bump existing file time
                 SetCurrentChangeTime();
             }
         }
 
-        public void Delete() {
+        public void Delete()
+        {
             try { File.Delete(FileName); } catch { }
             FileName = null;
         }
 
-        void SetCurrentChangeTime() {
-            try {
+        void SetCurrentChangeTime()
+        {
+            try
+            {
                 CreatedAt = DateTime.Now;
                 File.SetCreationTime(FileName, CreatedAt);
             }
             catch { }
         }
 
-        bool EnsureFileExists() {
-            try {
+        bool EnsureFileExists()
+        {
+            try
+            {
                 if (!string.IsNullOrEmpty(FileName) && File.Exists(FileName)) return true;
             }
             catch { }
@@ -564,10 +645,12 @@ namespace Swiddler.ViewModels {
 
         object ICloneable.Clone() => Copy();
 
-        public ConnectionSettings Copy(ConnectionSettings template = null) {
+        public ConnectionSettings Copy(ConnectionSettings template = null)
+        {
             if (template == null) template = this;
 
-            var obj = new ConnectionSettings() {
+            var obj = new ConnectionSettings()
+            {
                 FileName = template.FileName,
                 CreatedAt = template.CreatedAt,
 
@@ -594,8 +677,10 @@ namespace Swiddler.ViewModels {
 
         #region DesignInstance
 
-        private ConnectionSettings(bool isDesignInstance) {
-            if (isDesignInstance) {
+        private ConnectionSettings(bool isDesignInstance)
+        {
+            if (isDesignInstance)
+            {
                 TCPServer = TCPServerSettings.DesignInstance;
                 TCPClient = TCPClientSettings.DesignInstance;
                 UDPClient = UDPClientSettings.DesignInstance;
@@ -615,22 +700,26 @@ namespace Swiddler.ViewModels {
             }
         }
 
-        public static ConnectionSettings DesignInstance {
+        public static ConnectionSettings DesignInstance
+        {
             get => new ConnectionSettings(isDesignInstance: true);
         }
 
         #endregion
     }
 
-    public class BatchConnectionSettings {
+    public class BatchConnectionSettings
+    {
         private static readonly XmlWriterSettings writerSettings = new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true, Encoding = new UTF8Encoding(false) };
         private static readonly XmlSerializerNamespaces emptyNamespaces = new XmlSerializerNamespaces(new[] { new XmlQualifiedName("", "") });
         private static readonly XmlSerializer serializer = new XmlSerializer(typeof(BatchConnectionSettings));
         public List<ConnectionSettings> ConnectionSettingses { get; } = new List<ConnectionSettings>();
 
-        public byte[] Serialize() {
+        public byte[] Serialize()
+        {
             using (var stream = new MemoryStream())
-            using (var writer = XmlWriter.Create(stream, writerSettings)) {
+            using (var writer = XmlWriter.Create(stream, writerSettings))
+            {
                 serializer.Serialize(writer, this, emptyNamespaces);
                 return stream.ToArray();
             }
@@ -652,7 +741,7 @@ namespace Swiddler.ViewModels {
 
         public static BatchConnectionSettings New()
         {
-            var obj  = new BatchConnectionSettings();
+            var obj = new BatchConnectionSettings();
             obj.ConnectionSettingses.Add(ConnectionSettings.New());
             obj.ConnectionSettingses.Add(ConnectionSettings.New());
             return obj;
