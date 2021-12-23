@@ -67,6 +67,56 @@ namespace Swiddler.ViewModels
             _FlattenItems.RemoveRange(itemIndex, (item.IsExpanded ? session.Children.Count : 0) + 1);
         }
 
+        public void ClearStoppedEntry()
+        {
+            for (var index = RootSessions.Count - 1; index >= 0; index--)
+            {
+                var itm = RootSessions[index];
+                foreach (var child in itm.Children)
+                {
+                    if (child.State == SessionState.Stopped || child.State == SessionState.Offline ||
+                        child.State == SessionState.Error)
+                    {
+                        RemoveChildSession(child);
+                    }
+                }
+                if (itm.State == SessionState.Stopped || itm.State == SessionState.Offline ||
+                    itm.State == SessionState.Error)
+                {
+                    _RootSessions.Remove(itm);
+                    var entry = sessionMap[itm];
+                    _FlattenItems.Remove(entry.SessionListItem);
+                    sessionMap.Remove(itm);
+                }
+            }
+        }
+
+
+        private void RemoveChildSession(Session child)
+        {
+            var parentSession = child.Parent;
+            var entry = sessionMap[parentSession];
+            var rootItem = entry.SessionListItem; // owner
+            var itm = entry.ChildItems.Find(it => it.Session == child);
+            if (itm != null)
+            {
+                entry.ChildItems.Remove(itm);
+                if (rootItem.HasToggleButton)
+                {
+                    rootItem.IsExpanded = rootItem.HasToggleButton = entry.ChildItems.Count > 0;
+                }
+
+                if (itm.IsFlagged)
+                {
+                    itm.IsFlagged = false;
+                    rootItem.IsFlagged = true;
+                }
+
+                sessionMap.Remove(child);
+                _FlattenItems.Remove(itm);
+            }
+        }
+
         private void HandleNewChildSession(object sender, Session child)
         {
             var parentSession = (Session)sender;
@@ -83,7 +133,7 @@ namespace Swiddler.ViewModels
                 rootItem.IsExpanded = true;
             }
 
-            if (rootItem.IsExpanded == true)
+            if (rootItem.IsExpanded)
             {
                 var index = _FlattenItems.IndexOf(rootItem);
 
