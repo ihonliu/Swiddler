@@ -38,7 +38,19 @@ namespace Swiddler.Views
         public bool PcapSelectionExport { get => App.Current.PcapSelectionExport; set => App.Current.PcapSelectionExport = value; }
         public bool BinaryInput { get; private set; }
 
-        public Encoding InputEncoding { get; private set; } = Encoding.UTF8;
+        public Encoding InputEncoding
+        {
+            get => _inputEncoding;
+            private set
+            {
+                if (Equals(_inputEncoding, value))
+                {
+                    return;
+                }
+                _inputEncoding = value;
+                chunkView.FragmentView.Content.Metrics.Encoding = value;
+            }
+        }
 
         public BindableProperties Properties { get; } = new BindableProperties();
 
@@ -157,6 +169,7 @@ namespace Swiddler.Views
         }
 
         GridLength validInputRowHeight;
+        private Encoding _inputEncoding = Encoding.UTF8;
 
         void UpdateInputVisibility(Session session)
         {
@@ -493,12 +506,10 @@ namespace Swiddler.Views
             if (!(e.AddedItems[0] is EncodingList el)) return;
             switch (el)
             {
-                case EncodingList.UTF_8:
-                    InputEncoding = Encoding.UTF8;
-                    break;
                 case EncodingList.OEM_US:
                     InputEncoding = Encoding.GetEncoding(437); // IBM 437 (OEM-US)
                     break;
+                case EncodingList.UTF_8:
                 default:
                     InputEncoding = Encoding.UTF8;
                     break;
@@ -508,6 +519,7 @@ namespace Swiddler.Views
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             sessionTree.ClearStoppedEntry();
+            GC.Collect();
         }
     }
 }

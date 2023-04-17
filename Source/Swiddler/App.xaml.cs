@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Annotations;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -86,7 +87,18 @@ namespace Swiddler
                 fs.Write(bs, 0, bs.Length);
                 fs.Close();
                 Shutdown(0);
+            }
+            else if (firstArg != null && firstArg.EndsWith(".xml") && e.Args.Length == 1)
+            {
+                var bcs = BatchConnectionSettings.Deserialize(File.ReadAllBytes(e.Args[0]));
+                if (bcs.ConnectionSettingses.Count <= 0) return;
+                var mainWindow = new MainWindow();
 
+                foreach (var c in bcs.ConnectionSettingses)
+                {
+                    mainWindow.AddSessionAndStart(c.CreateSession());
+                }
+                mainWindow.Show();
             }
             else
             {

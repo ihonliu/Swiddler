@@ -79,7 +79,8 @@ namespace Swiddler.Rendering
                 {
                     //Encoding = Encoding.GetEncoding(437), // IBM 437 (OEM-US)
                     Encoding = Encoding.UTF8, 
-                    Typeface = new Typeface("Lucida Console"),
+                    //Typeface = new Typeface("Lucida Console"),
+                    Typeface = new Typeface("宋体"),
                     FontSize = 14,
                 }
             };
