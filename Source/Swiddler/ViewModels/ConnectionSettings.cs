@@ -329,7 +329,7 @@ namespace Swiddler.ViewModels
 
             var session = new Session()
             {
-                Description = ServerChecked ? ServerSettings.Name : null,
+                Description = Name,
                 ClientSettings = ClientChecked ? ClientSettings : null,
                 ServerSettings = ServerChecked ? ServerSettings : null,
                 Rewrites = RewriteSettings.GetRewriteRules(Rewrites),
@@ -388,6 +388,12 @@ namespace Swiddler.ViewModels
                 if (UDPChecked) return UDPServer;
                 return null;
             }
+        }
+
+        public string Name
+        {
+            get;
+            set; 
         }
 
         #region Validation
@@ -744,6 +750,12 @@ namespace Swiddler.ViewModels
             var obj = new BatchConnectionSettings();
             obj.ConnectionSettingses.Add(ConnectionSettings.New());
             obj.ConnectionSettingses.Add(ConnectionSettings.New());
+            return obj;
+        }
+
+        public static BatchConnectionSettings NewEmpty()
+        {
+            var obj = new BatchConnectionSettings();
             return obj;
         }
     }

@@ -90,6 +90,7 @@
     <Compile Include="Converters\CertificateValidityConverter.cs" />
     <Compile Include="Converters\IntEnumConverter.cs" />
     <Compile Include="Converters\AssignableTypeConverter.cs" />
+    <Compile Include="Converters\ShowIfEmptyStringConverter.cs" />
     <Compile Include="IO\ChunkWriter.cs" />
     <Compile Include="Serialization\IPBuilder.cs" />
     <Compile Include="IO\SyncedFileStream.cs" />

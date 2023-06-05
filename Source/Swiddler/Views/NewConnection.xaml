@@ -136,10 +136,10 @@
 
             </ListBox>
         </Grid>
-        
+
         <!-- vertical || splitter -->
         <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ShowsPreview="False" Focusable="False" Background="{StaticResource Swiddler.ControlLightBrush}" />
-        
+
         <Grid Grid.Column="2" SnapsToDevicePixels="True" UseLayoutRounding="True" 
               Background="White" MouseLeftButtonDown="DragMove"
               DataContext="{Binding ConnectionSettings}" Name="ConnectionSettingsControl"
@@ -184,7 +184,7 @@
                 <Controls:LockableToggleButton LockToggle="{Binding ServerToggleLocked}" IsChecked="{Binding ServerChecked}" Content="{Binding ServerToggleText}" Visibility="{Binding AnyProtocolChecked, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Controls:LockableToggleButton LockToggle="{Binding ClientToggleLocked}" IsChecked="{Binding ClientChecked}" Content="{Binding ClientToggleText}" Visibility="{Binding AnyProtocolChecked, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <Separator />
-                
+
                 <Controls:LockableToggleButton Padding="6 0" LockToggle="True" Content="＋" 
                                                Visibility="{Binding AnyProtocolChecked, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                b:Button.ClickOpensContextMenu="True"
@@ -256,75 +256,97 @@
                         </Style.Triggers>
                     </Style>
                 </ScrollViewer.Style>
-                <ItemsControl Focusable="False" ItemsSource="{Binding Settings}">
-                    <ItemsControl.Resources>
-                        <DataTemplate DataType="{x:Type sock:TCPServerSettings}">
-                            <av:Listener />
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type sock:TCPClientSettings}">
-                            <av:Client />
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type sock:UDPClientSettings}">
-                            <av:UDPClient />
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type sock:UDPServerSettings}">
-                            <av:UDPServer />
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type sock:RewriteSettings}">
-                            <av:Rewrite />
-                        </DataTemplate>
-                        <DataTemplate DataType="{x:Type sock:SnifferSettings}">
-                            <av:Sniffer />
-                        </DataTemplate>
-                    </ItemsControl.Resources>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type sock:SettingsBase}">
-                            <StackPanel Name="panel" Background="White">
-                                <DockPanel Margin="0 10 0 2">
-                                    <Controls:CrispImage ImageName="{Binding ImageName}" Height="20" Width="20" />
-                                    <TextBlock FontWeight="Bold" Margin="4 2" Text="{Binding Caption}" />
-                                    <Button DockPanel.Dock="Right" Click="DeleteSettings_Click" VerticalAlignment="Bottom" ToolTip="Remove"
+
+                <VirtualizingStackPanel>
+                    <StackPanel Background="White">
+                        <DockPanel Margin="0 10 0 2">
+                            <Controls:CrispImage ImageName="Gear" Height="20" Width="20"></Controls:CrispImage>
+                            <TextBlock FontWeight="Bold" Margin="4 2" Text="Name" />
+                        </DockPanel>
+                        <Border Margin="4" Background="{StaticResource Swiddler.ControlLightBrush}" CornerRadius="2"
+                                   >
+                            <Grid Margin ="0 4" HorizontalAlignment="Stretch">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Label Target="{Binding ElementName=Name}" Grid.Row="0">Name</Label>
+                                <TextBox Margin="4 0" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}" x:Name="Name" Grid.Row="1"
+                                      HorizontalAlignment="Left" Height="22" Width="318"></TextBox>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <ItemsControl Focusable="False" ItemsSource="{Binding Settings}">
+                        <ItemsControl.Resources>
+                            <DataTemplate DataType="{x:Type sock:TCPServerSettings}">
+                                <av:Listener />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type sock:TCPClientSettings}">
+                                <av:Client />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type sock:UDPClientSettings}">
+                                <av:UDPClient />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type sock:UDPServerSettings}">
+                                <av:UDPServer />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type sock:RewriteSettings}">
+                                <av:Rewrite />
+                            </DataTemplate>
+                            <DataTemplate DataType="{x:Type sock:SnifferSettings}">
+                                <av:Sniffer />
+                            </DataTemplate>
+                        </ItemsControl.Resources>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type sock:SettingsBase}">
+                                <StackPanel Name="panel" Background="White">
+                                    <DockPanel Margin="0 10 0 2">
+                                        <Controls:CrispImage ImageName="{Binding ImageName}" Height="20" Width="20" />
+                                        <TextBlock FontWeight="Bold" Margin="4 2" Text="{Binding Caption}" />
+                                        <Button DockPanel.Dock="Right" Click="DeleteSettings_Click" VerticalAlignment="Bottom" ToolTip="Remove"
                                             Focusable="False" FocusVisualStyle="{x:Null}" IsTabStop="False">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Visibility" Value="Hidden" />
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Controls:CrispImage x:Name="img" ImageName="Trash" Height="16" Width="16" Focusable="False"
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Hidden" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Controls:CrispImage x:Name="img" ImageName="Trash" Height="16" Width="16" Focusable="False"
                                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
                                                               SnapsToDevicePixels="True"
                                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                                                        
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="False">
-                                                                    <Setter Property="Opacity" TargetName="img" Value="0.5"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsPressed" Value="True">
-                                                                    <Setter Property="Opacity" TargetName="img" Value="0.7"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=panel}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                    <!-- fill space between delete button with border -->
-                                    <Border/>
-                                </DockPanel>
-                                <Border Margin="0" Background="{StaticResource Swiddler.ControlLightBrush}" CornerRadius="2">
-                                    <ContentPresenter Content="{Binding}" />
-                                </Border>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="False">
+                                                                        <Setter Property="Opacity" TargetName="img" Value="0.5"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsPressed" Value="True">
+                                                                        <Setter Property="Opacity" TargetName="img" Value="0.7"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=panel}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <!-- fill space between delete button with border -->
+                                        <Border/>
+                                    </DockPanel>
+                                    <Border Margin="0" Background="{StaticResource Swiddler.ControlLightBrush}" CornerRadius="2">
+                                        <ContentPresenter Content="{Binding}" />
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </VirtualizingStackPanel>
             </ScrollViewer>
 
 

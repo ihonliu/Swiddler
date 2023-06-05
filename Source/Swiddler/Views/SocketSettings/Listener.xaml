@@ -11,7 +11,7 @@
              xmlns:sock="clr-namespace:Swiddler.SocketSettings"
              mc:Ignorable="d"
              d:DataContext="{x:Static sock:TCPServerSettings.DesignInstance}" >
-    
+
     <StackPanel Margin="4 0 4 4">
         <StackPanel.Resources>
             <Style TargetType="Label">
@@ -110,7 +110,7 @@
                      Text="{Binding GeneratedServerCertificatePrefix, UpdateSourceTrigger=PropertyChanged}" />
 
         </StackPanel>
-        
+
 
     </StackPanel>
 </UserControl>

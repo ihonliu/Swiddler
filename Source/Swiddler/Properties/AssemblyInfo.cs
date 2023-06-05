@@ -12,7 +12,7 @@ using System.Windows.Markup;
 [assembly: AssemblyDescription("TCP/UDP debugging tool")]
 [assembly: AssemblyCompany("Jan Lucansky")]
 [assembly: AssemblyProduct("Swiddler")]
-[assembly: AssemblyCopyright("Copyright © 2018-2021 Jan Lucansky")]
+[assembly: AssemblyCopyright("Copyright © 2018-2023 Jan Lucansky")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
@@ -55,4 +55,4 @@ using System.Windows.Markup;
 [assembly: AssemblyVersion("1.0.8.0")]
 [assembly: AssemblyFileVersion("1.0.8.0")]
 
-[assembly: AssemblyInformationalVersion("1.0.6")]
+[assembly: AssemblyInformationalVersion("1.0.8")]

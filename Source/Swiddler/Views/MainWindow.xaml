@@ -9,6 +9,7 @@
         xmlns:cmd="clr-namespace:Swiddler.Commands"
         xmlns:local="clr-namespace:Swiddler.Views"
         xmlns:b="clr-namespace:Swiddler.Behaviors"
+        xmlns:converters="clr-namespace:Swiddler.Converters"
         mc:Ignorable="d"
 
         Icon="/AppIcon.ico"
@@ -74,7 +75,7 @@
             <Button Click="Open_Click" IsEnabled="False">
                 <ViewModels:ImageButton Text="Open" ImageName="OpenFolder" />
             </Button>
-            <Button Click="Save_Click" IsEnabled="False">
+            <Button Click="Save_Click" IsEnabled="True">
                 <ViewModels:ImageButton Text="Save" ImageName="Save" />
             </Button>
             <Separator />
@@ -121,13 +122,17 @@
                                     <StackPanel Orientation="Horizontal" 
                                             Margin="{Binding IndentLevel, Mode=OneWay, Converter={StaticResource TreeIndentConverter}, ConverterParameter={StaticResource TreeIndent}}">
                                         <Controls:TreeToggleButton x:Name="ToggleButton" IsChecked="{Binding IsExpanded, Mode=OneWay}" Visibility="Hidden"/>
-                                        <TextBlock Margin="2 0 0 0" >
-                                            <TextBlock.Text>
-                                                <MultiBinding StringFormat="{}{0} ({1})">
-                                                    <Binding Path="Title"></Binding>
-                                                    <Binding Path="Description"></Binding>
-                                                </MultiBinding>
-                                            </TextBlock.Text>
+                                        <TextBlock Margin="2 0 0 0" 
+                                                   Text="{Binding Title}">
+                                            <!-- <TextBlock.Text> -->
+                                            <!--     <MultiBinding StringFormat="{}{0} ({1})"> -->
+                                            <!--         <Binding Path="Title"></Binding> -->
+                                            <!--         <Binding Path="Description"></Binding> -->
+                                            <!--     </MultiBinding> -->
+                                            <!-- </TextBlock.Text> -->
+                                        </TextBlock>
+                                        <TextBlock Margin="2 0 0 0" Text="{Binding Description, StringFormat={}({0})}" 
+                                                   Visibility="{Binding Description, Converter={converters:ShowIfEmptyStringConverter}}">
                                         </TextBlock>
                                     </StackPanel>
                                     <DataTemplate.Triggers>

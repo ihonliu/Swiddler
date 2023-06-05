@@ -15,6 +15,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Microsoft.Win32;
+using Swiddler.SocketSettings;
+using Swiddler.Views.SocketSettings;
 
 namespace Swiddler.Views
 {
@@ -283,7 +286,87 @@ namespace Swiddler.Views
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
+            var settings = SerializeSettings();
+            var dialog = new SaveFileDialog
+            {
+                AddExtension = true,
+                Filter = "Batch Connection Settings (*.xml)|*.xml"
+            };
+            if (dialog.ShowDialog() != true) return;
+            using (var stream = dialog.OpenFile())
+            {
+                stream.Write(settings, 0, settings.Length);
+            }
+        }
 
+        private byte[] SerializeSettings()
+        {
+            var c = BatchConnectionSettings.NewEmpty();
+            foreach (var s in sessionListView.Tree.RootSessions)
+            {
+                var setting = ConnectionSettings.New();
+                setting.Name=  s.Description;
+                if (s.ServerSettings != null)
+                {
+                    switch (s.ServerSettings)
+                    {
+                        case TCPServerSettings tss:
+                            setting.TCPServer = tss;
+                            setting.UDPServer = null;
+                            setting.TCPChecked = true;
+                            break;
+                        case UDPServerSettings uss:
+                            setting.UDPServer = uss;
+                            setting.TCPServer = null;
+                            setting.UDPChecked = true;
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"Not supported server settings: [{s.ServerSettings.GetType().FullName}]");
+                    }
+                    setting.ServerChecked = true;
+                }
+                else
+                {
+                    setting.ServerChecked = false;
+                    setting.TCPServer = null;
+                    setting.UDPServer = null;
+                }
+
+                if (s.ClientSettings != null)
+                {
+                    switch (s.ClientSettings)
+                    {
+                        case TCPClientSettings tcs:
+                            setting.TCPClient = tcs;
+                            setting.UDPClient = null;
+                            setting.TCPChecked = true;
+                            break;
+                        case UDPClientSettings ucs:
+                            setting.UDPClient = ucs;
+                            setting.TCPClient = null;
+                            setting.UDPChecked = true;
+                            break;
+                        default:
+                            throw new NotSupportedException(
+                                $"Not supported client settings: [{s.ClientSettings.GetType().FullName}]");
+                    }
+
+                    setting.ClientChecked = true;
+                }
+                else
+                {
+                    setting.ClientChecked = false;
+                    setting.TCPClient = null;
+                    setting.UDPClient = null;
+                }
+
+                setting.Sniffer = s.Sniffer;
+
+                c.ConnectionSettingses.Add(setting);
+            }
+
+            return c.Serialize();
         }
 
         private void Disconnect_Click(object sender, RoutedEventArgs e)

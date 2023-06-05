@@ -18,9 +18,6 @@ namespace Swiddler.SocketSettings
         bool _DualMode;
         public bool DualMode { get => _DualMode; set { if (SetProperty(ref _DualMode, value)) DualModeChanged?.Invoke(this, value); } }
 
-        private string _Name;
-        public string Name { get => _Name; set => SetProperty(ref _Name, value); }
-
         [System.Xml.Serialization.XmlIgnore] public System.Net.Sockets.ProtocolType Protocol { get; protected set; } = System.Net.Sockets.ProtocolType.Unknown;
         public override string ToString() => IPAddress + ":" + Port;
     }
