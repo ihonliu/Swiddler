@@ -52,7 +52,7 @@ using System.Windows.Markup;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.8.0")]
-[assembly: AssemblyFileVersion("1.0.8.0")]
+[assembly: AssemblyVersion("1.0.9.0")]
+[assembly: AssemblyFileVersion("1.0.9.0")]
 
-[assembly: AssemblyInformationalVersion("1.0.8")]
+[assembly: AssemblyInformationalVersion("1.0.9")]

@@ -38,7 +38,12 @@ namespace Swiddler.Views
 
         private ObservableCollection<string> quickMRU;
 
-        public bool PcapSelectionExport { get => App.Current.PcapSelectionExport; set => App.Current.PcapSelectionExport = value; }
+        public bool PcapSelectionExport
+        {
+            get => App.Current.PcapSelectionExport;
+            set => App.Current.PcapSelectionExport = value;
+        }
+
         public bool BinaryInput { get; private set; }
 
         public Encoding InputEncoding
@@ -50,6 +55,7 @@ namespace Swiddler.Views
                 {
                     return;
                 }
+
                 _inputEncoding = value;
                 chunkView.FragmentView.Content.Metrics.Encoding = value;
             }
@@ -78,8 +84,10 @@ namespace Swiddler.Views
 
             if (userSettings.MainWindowBounds.HasSize())
             {
-                if (userSettings.MainWindowLeftColumn > 0) leftCol.Width = new GridLength(userSettings.MainWindowLeftColumn);
-                if (userSettings.MainWindowBottomRow > 0) InputRowHeight = new GridLength(userSettings.MainWindowBottomRow);
+                if (userSettings.MainWindowLeftColumn > 0)
+                    leftCol.Width = new GridLength(userSettings.MainWindowLeftColumn);
+                if (userSettings.MainWindowBottomRow > 0)
+                    InputRowHeight = new GridLength(userSettings.MainWindowBottomRow);
             }
 
             InitMRU(userSettings.QuickMRU);
@@ -91,7 +99,10 @@ namespace Swiddler.Views
             chunkView.FragmentView.OleProgressChanged += OleProgressChanged;
             chunkView.FragmentView.SessionChanged += FragmentView_SessionChanged;
 
-            CommandManager.AddPreviewExecutedHandler(inputText, (s, e) => { if (e.Command == ApplicationCommands.Paste) OnPasteCommand(s, e); });
+            CommandManager.AddPreviewExecutedHandler(inputText, (s, e) =>
+            {
+                if (e.Command == ApplicationCommands.Paste) OnPasteCommand(s, e);
+            });
 
             CommandBindings.Add(new CommandBinding(ApplicationCommands.New, NewConnection_Click));
             CommandBindings.Add(new CommandBinding(MiscCommands.Disconnect, Disconnect_Click));
@@ -105,7 +116,8 @@ namespace Swiddler.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            Properties.InputText_ScrollViewer = inputText.Template.FindName("PART_ContentHost", inputText) as ScrollViewer;
+            Properties.InputText_ScrollViewer =
+                inputText.Template.FindName("PART_ContentHost", inputText) as ScrollViewer;
             Properties.InputVisibility = Visibility.Collapsed;
         }
 
@@ -168,7 +180,8 @@ namespace Swiddler.Views
 
         void UpdateCanStop(SessionState state)
         {
-            Properties.CanStop = state == SessionState.New || state == SessionState.Started || state == SessionState.Starting;
+            Properties.CanStop = state == SessionState.New || state == SessionState.Started ||
+                                 state == SessionState.Starting;
         }
 
         GridLength validInputRowHeight;
@@ -178,14 +191,17 @@ namespace Swiddler.Views
         {
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                Properties.InputVisibility = session.SessionChannel?.IsActive == true ? Visibility.Visible : Visibility.Collapsed;
+                Properties.InputVisibility =
+                    session.SessionChannel?.IsActive == true ? Visibility.Visible : Visibility.Collapsed;
 
-                if (Properties.InputVisibility == Visibility.Visible && inputRow.Height.GridUnitType == GridUnitType.Auto)
+                if (Properties.InputVisibility == Visibility.Visible &&
+                    inputRow.Height.GridUnitType == GridUnitType.Auto)
                 {
                     inputRow.Height = validInputRowHeight;
                     inputRow.MinHeight = 40;
                 }
-                else if (Properties.InputVisibility != Visibility.Visible && inputRow.Height.GridUnitType != GridUnitType.Auto)
+                else if (Properties.InputVisibility != Visibility.Visible &&
+                         inputRow.Height.GridUnitType != GridUnitType.Auto)
                 {
                     validInputRowHeight = inputRow.Height;
                     inputRow.Height = GridLength.Auto;
@@ -282,6 +298,48 @@ namespace Swiddler.Views
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
+            StopAllSession();
+            ClearStoppedSession();
+            var settings = DeserializeSettings();
+            if (settings == null)
+            {
+                MessageBox.Show("Deserialize setting failed", "Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, MessageBoxOptions.None);
+                return;
+            }
+
+            foreach (var c in settings.ConnectionSettingses)
+            {
+                AddSessionAndStart(c.CreateSession());
+            }
+        }
+
+        private void ClearStoppedSession()
+        {
+            sessionTree.ClearStoppedEntry();
+            GC.Collect();
+        }
+
+        private void StopAllSession()
+        {
+            foreach (var s in sessionTree.FlattenItems)
+            {
+                s.Session.Stop();
+            }
+        }
+
+        private BatchConnectionSettings DeserializeSettings()
+        {
+            var fileDialog = new OpenFileDialog()
+            {
+                AddExtension = true,
+                Filter = "Batch Connection Settings (*.xml)|*.xml",
+                Multiselect = false,
+            };
+            var result = fileDialog.ShowDialog(this);
+            if (result != true) return null;
+            var ret = BatchConnectionSettings.Deserialize(File.ReadAllBytes(fileDialog.FileName));
+            if (ret.ConnectionSettingses.Count <= 0) return null;
+            return ret;
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -305,7 +363,7 @@ namespace Swiddler.Views
             foreach (var s in sessionListView.Tree.RootSessions)
             {
                 var setting = ConnectionSettings.New();
-                setting.Name=  s.Description;
+                setting.Name = s.Description;
                 if (s.ServerSettings != null)
                 {
                     switch (s.ServerSettings)
@@ -601,8 +659,12 @@ namespace Swiddler.Views
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
-            sessionTree.ClearStoppedEntry();
-            GC.Collect();
+            ClearStoppedSession();
+        }
+
+        private void StopAll_Click(object sender, RoutedEventArgs e)
+        {
+            StopAllSession();
         }
     }
 }

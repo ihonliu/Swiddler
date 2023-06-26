@@ -72,7 +72,7 @@
                 </DataTemplate>
             </ToolBar.Resources>
 
-            <Button Click="Open_Click" IsEnabled="False">
+            <Button Click="Open_Click" IsEnabled="True">
                 <ViewModels:ImageButton Text="Open" ImageName="OpenFolder" />
             </Button>
             <Button Click="Save_Click" IsEnabled="True">
@@ -81,6 +81,9 @@
             <Separator />
             <Button Click="Clear_Click" IsEnabled="True">
                 <ViewModels:ImageButton Text="Clear" ImageName="Star"/>
+            </Button>
+            <Button Click="StopAll_Click" IsEnabled="True">
+                <ViewModels:ImageButton Text="Stop all" ImageName="Stop"/>
             </Button>
             <Separator />
             <Button Click="NewConnection_Click">
